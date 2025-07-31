@@ -1,10 +1,11 @@
 use std::collections::{BTreeSet, HashMap};
 
 use binrs::{
-    decoder::{Decode, Decoder},
-    encoder::{Encode, Encoder},
+    decoder::{Decode},
+    encoder::{Encode},
     error::Error,
 };
+use binrs_derive::{Decode, Encode};
 
 fn main() {
     let user = User {
@@ -25,7 +26,8 @@ fn main() {
             .iter()
             .map(|s| s.to_string())
             .collect(),
-        last_login: Some(1_722_145_600), // пример Unix-времени
+        last_login: Some(1_722_145_600),
+        ignored: "Ignored".to_string(),
     };
 
     let bytes = user.encode_to_bytes().unwrap();
@@ -35,7 +37,7 @@ fn main() {
     println!("{user:#?}");
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Encode, Decode)]
 pub struct User {
     pub id: u64,
     pub username: String,
@@ -47,36 +49,7 @@ pub struct User {
     pub notifications_enabled: Result<bool, String>,
     pub tags: BTreeSet<String>,
     pub last_login: Option<u64>,
+    #[bin(skip)]
+    pub ignored: String,
 }
 
-impl Encode for User {
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), Error> {
-        self.id.encode(encoder)?;
-        self.username.encode(encoder)?;
-        self.email.encode(encoder)?;
-        self.age.encode(encoder)?;
-        self.is_active.encode(encoder)?;
-        self.roles.encode(encoder)?;
-        self.settings.encode(encoder)?;
-        self.notifications_enabled.encode(encoder)?;
-        self.tags.encode(encoder)?;
-        self.last_login.encode(encoder)
-    }
-}
-
-impl Decode for User {
-    fn decode<D: Decoder>(decoder: &mut D) -> Result<Self, Error> {
-        Ok(Self {
-            id: u64::decode(decoder)?,
-            username: String::decode(decoder)?,
-            email: Option::<String>::decode(decoder)?,
-            age: Option::<u8>::decode(decoder)?,
-            is_active: bool::decode(decoder)?,
-            roles: Vec::<String>::decode(decoder)?,
-            settings: HashMap::<String, String>::decode(decoder)?,
-            notifications_enabled: Result::<bool, String>::decode(decoder)?,
-            tags: BTreeSet::<String>::decode(decoder)?,
-            last_login: Option::<u64>::decode(decoder)?,
-        })
-    }
-}

@@ -2,3 +2,6 @@
 name = "binrs"
 version = "0.1.0"
 edition = "2024"
+
+[dependencies]
+binrs-derive = { path = "./binrs-derive" }
